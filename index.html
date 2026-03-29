@@ -1,1 +1,425 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>BSG Dev Tool</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #000d1a; color: #e6f2ff; font-family: 'Rajdhani', sans-serif; min-height: 100vh; padding: 20px; }
 
+/* HEADER */
+.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; padding: 16px 24px; background: #001a33; border: 2px solid #004080; border-radius: 14px; }
+.header-title { font-family: 'Orbitron', monospace; font-size: 20px; font-weight: 900; letter-spacing: 3px; }
+.header-title span { color: #007bff; }
+.header-sub { font-size: 11px; color: #4a7ab5; letter-spacing: 2px; margin-top: 3px; }
+.status-badge { font-family: 'Orbitron', monospace; font-size: 10px; letter-spacing: 2px; padding: 6px 14px; border-radius: 20px; background: rgba(46,204,113,0.15); border: 1px solid #2ecc71; color: #2ecc71; }
+
+/* TABS */
+.tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+.tab { flex: 1; padding: 12px; font-family: 'Orbitron', monospace; font-size: 11px; font-weight: 700; letter-spacing: 2px; background: #001a33; border: 2px solid #004080; border-radius: 10px; color: #4a7ab5; cursor: pointer; text-transform: uppercase; transition: all 0.2s; text-align: center; }
+.tab:hover { border-color: #007bff; color: #007bff; }
+.tab.active { border-color: #007bff; color: #007bff; background: rgba(0,123,255,0.1); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* PANELS */
+.panel { background: #001a33; border: 2px solid #004080; border-radius: 14px; padding: 20px; margin-bottom: 16px; }
+.panel-title { font-family: 'Orbitron', monospace; font-size: 11px; letter-spacing: 3px; color: #007bff; text-transform: uppercase; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #004080; }
+
+/* CODE INPUT */
+.code-area { width: 100%; min-height: 300px; background: rgba(0,10,24,0.8); border: 2px solid #004080; border-radius: 8px; color: #e6f2ff; font-size: 12px; font-family: 'Courier New', monospace; padding: 14px; outline: none; resize: vertical; transition: border-color 0.2s; line-height: 1.5; }
+.code-area:focus { border-color: #007bff; }
+.code-area::placeholder { color: #2a4a6a; }
+
+/* BUTTONS */
+.btn { padding: 12px 24px; font-family: 'Orbitron', monospace; font-size: 11px; font-weight: 700; letter-spacing: 2px; background: transparent; border: 2px solid #007bff; color: #007bff; border-radius: 8px; cursor: pointer; text-transform: uppercase; transition: all 0.2s; }
+.btn:hover { background: #007bff; color: white; box-shadow: 0 0 20px rgba(0,123,255,0.4); }
+.btn.green  { border-color: #2ecc71; color: #2ecc71; } .btn.green:hover  { background: #2ecc71; color: #000; }
+.btn.red    { border-color: #ff4d4d; color: #ff4d4d; } .btn.red:hover    { background: #ff4d4d; color: white; }
+.btn.purple { border-color: #b388ff; color: #b388ff; } .btn.purple:hover { background: #b388ff; color: #000; }
+.btn-row { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+
+/* RESULTS */
+.results { margin-top: 16px; }
+.result-item { padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; font-size: 13px; display: flex; align-items: flex-start; gap: 10px; }
+.result-item.error   { background: rgba(255,77,77,0.1);   border: 1px solid #ff4d4d; color: #ff4d4d; }
+.result-item.warning { background: rgba(241,196,15,0.1);  border: 1px solid #f1c40f; color: #f1c40f; }
+.result-item.success { background: rgba(46,204,113,0.1);  border: 1px solid #2ecc71; color: #2ecc71; }
+.result-item.info    { background: rgba(0,123,255,0.1);   border: 1px solid #007bff; color: #80bdff; }
+.result-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.result-text { flex: 1; line-height: 1.5; }
+.result-line { font-family: 'Orbitron', monospace; font-size: 9px; color: inherit; opacity: 0.7; margin-top: 3px; }
+
+/* AI ANALYSIS */
+.ai-output { background: rgba(0,10,24,0.8); border: 2px solid #004080; border-radius: 8px; padding: 16px; margin-top: 14px; font-size: 13px; line-height: 1.7; min-height: 100px; white-space: pre-wrap; font-family: 'Rajdhani', sans-serif; }
+.ai-loading { text-align: center; padding: 30px; font-family: 'Orbitron', monospace; font-size: 11px; letter-spacing: 3px; color: #b388ff; animation: blink 1s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* STATS */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.stat-card { background: rgba(0,20,40,0.6); border: 1px solid #004080; border-radius: 10px; padding: 14px; text-align: center; }
+.stat-val { font-family: 'Orbitron', monospace; font-size: 24px; font-weight: 900; }
+.stat-lbl { font-size: 9px; letter-spacing: 2px; color: #4a7ab5; text-transform: uppercase; margin-top: 3px; }
+
+/* ISSUE SEVERITY */
+.severity-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.sev-badge { padding: 4px 12px; border-radius: 20px; font-family: 'Orbitron', monospace; font-size: 9px; letter-spacing: 1px; font-weight: 700; }
+.sev-critical { background: rgba(255,77,77,0.2);   border: 1px solid #ff4d4d; color: #ff4d4d; }
+.sev-warning  { background: rgba(241,196,15,0.2);  border: 1px solid #f1c40f; color: #f1c40f; }
+.sev-info     { background: rgba(0,123,255,0.2);   border: 1px solid #007bff; color: #80bdff; }
+.sev-ok       { background: rgba(46,204,113,0.2);  border: 1px solid #2ecc71; color: #2ecc71; }
+
+/* HISTORY */
+.history-item { padding: 12px 14px; border-radius: 8px; margin-bottom: 8px; background: rgba(0,20,40,0.5); border: 1px solid #004080; cursor: pointer; transition: border-color 0.2s; }
+.history-item:hover { border-color: #007bff; }
+.history-time { font-family: 'Orbitron', monospace; font-size: 9px; color: #4a7ab5; letter-spacing: 2px; }
+.history-summary { font-size: 13px; margin-top: 4px; }
+
+/* LOADING SPINNER */
+.spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #004080; border-top-color: #007bff; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px; vertical-align: middle; }
+@keyframes spin { to{transform:rotate(360deg)} }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-thumb { background: #004080; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div>
+        <div class="header-title"><span>BSG</span> Dev Tool</div>
+        <div class="header-sub">Blue Square Games — Code Analyzer & Debugger</div>
+    </div>
+    <div class="status-badge">&#9679; READY</div>
+</div>
+
+<div class="tabs">
+    <div class="tab active" onclick="switchTab('analyzer')">&#128269; Analyzer</div>
+    <div class="tab" onclick="switchTab('ai')">&#129302; AI Review</div>
+    <div class="tab" onclick="switchTab('history')">&#128203; History</div>
+</div>
+
+<!-- ============================================================
+     TAB 1 — STATIC ANALYZER
+============================================================ -->
+<div id="tab-analyzer" class="tab-content active">
+    <div class="panel">
+        <div class="panel-title">&#128196; Paste Your Code</div>
+        <textarea class="code-area" id="code-input" placeholder="Paste your BlueSquareGames HTML file here..."></textarea>
+        <div class="btn-row">
+            <button class="btn green" onclick="runAnalysis()">&#9654; Run Analysis</button>
+            <button class="btn" onclick="clearAll()">&#10005; Clear</button>
+            <button class="btn purple" onclick="copyClean()">&#128203; Copy Fixed Code</button>
+        </div>
+    </div>
+
+    <div id="stats-section" style="display:none">
+        <div class="stats-grid" id="stats-grid"></div>
+        <div class="severity-bar" id="severity-bar"></div>
+    </div>
+
+    <div id="results-section" style="display:none">
+        <div class="panel">
+            <div class="panel-title">&#9888; Issues Found</div>
+            <div id="results-list"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     TAB 2 — AI REVIEW
+============================================================ -->
+<div id="tab-ai" class="tab-content">
+    <div class="panel">
+        <div class="panel-title">&#129302; AI Code Review</div>
+        <p style="font-size:13px;color:#4a7ab5;letter-spacing:1px;margin-bottom:14px;">Paste your code in the Analyzer tab first, then click Analyze to get an AI review.</p>
+        <textarea class="code-area" id="ai-question" placeholder="Ask AI a specific question about your code... (optional)" style="min-height:80px;"></textarea>
+        <div class="btn-row">
+            <button class="btn purple" onclick="runAIReview()">&#10024; AI Full Review</button>
+            <button class="btn" onclick="runAIQuestion()">&#128172; Ask Specific Question</button>
+        </div>
+        <div id="ai-output" class="ai-output" style="display:none;color:#e6f2ff;"></div>
+    </div>
+</div>
+
+<!-- ============================================================
+     TAB 3 — HISTORY
+============================================================ -->
+<div id="tab-history" class="tab-content">
+    <div class="panel">
+        <div class="panel-title">&#128203; Analysis History</div>
+        <div id="history-list"><div style="text-align:center;color:#4a7ab5;padding:30px;font-family:'Orbitron',monospace;font-size:11px;letter-spacing:2px;">NO HISTORY YET</div></div>
+        <div class="btn-row">
+            <button class="btn red" onclick="clearHistory()">&#128465; Clear History</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    var analysisHistory = [];
+    var currentCode = '';
+    var cleanedCode = '';
+
+    /* ============================================================
+       TAB SWITCHING
+    ============================================================ */
+    function switchTab(tab) {
+        document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+        document.querySelectorAll('.tab-content').forEach(function(c){ c.classList.remove('active'); });
+        var tabMap = {analyzer:0, ai:1, history:2};
+        document.querySelectorAll('.tab')[tabMap[tab]].classList.add('active');
+        document.getElementById('tab-' + tab).classList.add('active');
+    }
+
+    /* ============================================================
+       STATIC ANALYSIS
+    ============================================================ */
+    function runAnalysis() {
+        var code = document.getElementById('code-input').value.trim();
+        if (!code) { alert('Paste your code first.'); return; }
+        currentCode = code;
+        cleanedCode = code;
+
+        var issues = [];
+        var lines = code.split('\n');
+
+        // 1. BRACE BALANCE
+        var scriptStart = code.indexOf('<script>');
+        var scriptEnd = code.lastIndexOf('</script>');
+        if (scriptStart !== -1 && scriptEnd !== -1) {
+            var script = code.substring(scriptStart + 8, scriptEnd);
+            var opens = (script.match(/{/g) || []).length;
+            var closes = (script.match(/}/g) || []).length;
+            if (opens !== closes) {
+                issues.push({ type: 'error', icon: '&#128308;', text: 'Unbalanced braces in JavaScript — ' + opens + ' opening { vs ' + closes + ' closing }. This crashes ALL JavaScript on the page.', line: 'JS Section' });
+            } else {
+                issues.push({ type: 'success', icon: '&#128994;', text: 'Braces balanced — ' + opens + ' opening and ' + closes + ' closing.', line: '' });
+            }
+
+            // 2. BACKTICK TEMPLATE LITERALS
+            var backticks = (script.match(/`/g) || []).length;
+            if (backticks > 0) {
+                issues.push({ type: 'error', icon: '&#128308;', text: 'Found ' + backticks + ' backtick(s) — Apps Script does NOT support template literals. Replace with string concatenation.', line: 'JS Section' });
+            }
+
+            // 3. ARROW FUNCTIONS
+            var arrows = (script.match(/=>/g) || []).length;
+            if (arrows > 0) {
+                issues.push({ type: 'error', icon: '&#128308;', text: 'Found ' + arrows + ' arrow function(s) (=>) — Apps Script does not support these. Use function() {} instead.', line: 'JS Section' });
+            }
+
+            // 4. LET/CONST
+            var lets = (script.match(/\blet\b/g) || []).length;
+            var consts = (script.match(/\bconst\b/g) || []).length;
+            if (lets > 0 || consts > 0) {
+                issues.push({ type: 'warning', icon: '&#128993;', text: 'Found ' + lets + ' let and ' + consts + ' const declarations. Use var instead for Apps Script compatibility.', line: 'JS Section' });
+            }
+
+            // 5. DEFAULT PARAMETERS
+            var defaultParams = script.match(/function\s+\w+\s*\([^)]*=\s*[^)]+\)/g);
+            if (defaultParams && defaultParams.length > 0) {
+                issues.push({ type: 'error', icon: '&#128308;', text: 'Found ' + defaultParams.length + ' function(s) with default parameters — not supported in Apps Script.', line: 'JS Section' });
+            }
+
+            // 6. DUPLICATE VAR DECLARATIONS
+            var varNames = {};
+            var varMatches = script.match(/var\s+(\w+)/g) || [];
+            varMatches.forEach(function(v) {
+                var name = v.replace('var ', '').trim();
+                varNames[name] = (varNames[name] || 0) + 1;
+            });
+            var dups = Object.keys(varNames).filter(function(k){ return varNames[k] > 1; });
+            if (dups.length > 0) {
+                issues.push({ type: 'warning', icon: '&#128993;', text: 'Duplicate var declarations: ' + dups.join(', ') + '. These can cause unexpected behavior.', line: 'JS Section' });
+            }
+        }
+
+        // 7. HTML STRUCTURE — UNCLOSED TAGS
+        var divOpens  = (code.match(/<div/g) || []).length;
+        var divCloses = (code.match(/<\/div>/g) || []).length;
+        if (divOpens !== divCloses) {
+            issues.push({ type: 'error', icon: '&#128308;', text: 'Unbalanced div tags — ' + divOpens + ' opening <div> vs ' + divCloses + ' closing </div>. This breaks page layout.', line: 'HTML Section' });
+        } else {
+            issues.push({ type: 'success', icon: '&#128994;', text: 'HTML div tags balanced — ' + divOpens + ' opening and ' + divCloses + ' closing.', line: '' });
+        }
+
+        // 8. ELEMENT IDs REFERENCED BUT NOT IN HTML
+        var jsSection = scriptStart !== -1 ? code.substring(scriptStart) : '';
+        var idRefs = jsSection.match(/getElementById\(['"]([^'"]+)['"]\)/g) || [];
+        var htmlIds = code.match(/id="([^"]+)"/g) || [];
+        var definedIds = htmlIds.map(function(id){ return id.replace('id="','').replace('"',''); });
+        var missingIds = [];
+        idRefs.forEach(function(ref){
+            var id = ref.match(/['"]([^'"]+)['"]/)[1];
+            if (definedIds.indexOf(id) === -1 && missingIds.indexOf(id) === -1) {
+                missingIds.push(id);
+            }
+        });
+        if (missingIds.length > 0) {
+            issues.push({ type: 'warning', icon: '&#128993;', text: 'JS references these element IDs that don\'t exist in HTML: ' + missingIds.join(', '), line: 'JS Section' });
+        }
+
+        // 9. NON-ASCII CHARACTERS IN JS STRINGS
+        if (scriptStart !== -1 && scriptEnd !== -1) {
+            var scriptContent = code.substring(scriptStart, scriptEnd);
+            var nonAscii = scriptContent.match(/[^\x00-\x7F]/g);
+            if (nonAscii && nonAscii.length > 0) {
+                issues.push({ type: 'error', icon: '&#128308;', text: 'Found ' + nonAscii.length + ' non-ASCII character(s) in JS (emoji, special chars). These break Apps Script. Use HTML entities like &#128512; instead.', line: 'JS Section' });
+            }
+        }
+
+        // 10. LINE COUNT
+        var lineCount = lines.length;
+        var lineStatus = lineCount < 2000 ? 'success' : lineCount < 2500 ? 'warning' : 'error';
+        var lineMsg = lineCount < 2000 ? 'Line count is healthy at ' + lineCount + ' lines.' : lineCount < 2500 ? 'Getting large at ' + lineCount + ' lines. Consider cleanup soon.' : 'Very large at ' + lineCount + ' lines. May cause issues.';
+        issues.push({ type: lineStatus, icon: lineStatus === 'success' ? '&#128994;' : '&#128993;', text: lineMsg, line: '' });
+
+        // RENDER STATS
+        var errors   = issues.filter(function(i){ return i.type === 'error'; }).length;
+        var warnings = issues.filter(function(i){ return i.type === 'warning'; }).length;
+        var successes = issues.filter(function(i){ return i.type === 'success'; }).length;
+
+        document.getElementById('stats-section').style.display = 'block';
+        document.getElementById('stats-grid').innerHTML =
+            '<div class="stat-card"><div class="stat-val" style="color:#ff4d4d">' + errors + '</div><div class="stat-lbl">Critical Issues</div></div>' +
+            '<div class="stat-card"><div class="stat-val" style="color:#f1c40f">' + warnings + '</div><div class="stat-lbl">Warnings</div></div>' +
+            '<div class="stat-card"><div class="stat-val" style="color:#2ecc71">' + successes + '</div><div class="stat-lbl">Checks Passed</div></div>' +
+            '<div class="stat-card"><div class="stat-val" style="color:#007bff">' + lineCount + '</div><div class="stat-lbl">Total Lines</div></div>';
+
+        document.getElementById('severity-bar').innerHTML =
+            (errors > 0   ? '<span class="sev-badge sev-critical">&#128308; ' + errors + ' Critical</span>' : '') +
+            (warnings > 0 ? '<span class="sev-badge sev-warning">&#128993; ' + warnings + ' Warning</span>' : '') +
+            (successes > 0 ? '<span class="sev-badge sev-ok">&#128994; ' + successes + ' OK</span>' : '');
+
+        // RENDER ISSUES
+        document.getElementById('results-section').style.display = 'block';
+        var html = '';
+        issues.forEach(function(issue){
+            html += '<div class="result-item ' + issue.type + '">' +
+                '<div class="result-icon">' + issue.icon + '</div>' +
+                '<div class="result-text">' + issue.text +
+                (issue.line ? '<div class="result-line">&#128205; ' + issue.line + '</div>' : '') +
+                '</div></div>';
+        });
+        document.getElementById('results-list').innerHTML = html;
+
+        // SAVE TO HISTORY
+        var timestamp = new Date().toLocaleTimeString();
+        analysisHistory.unshift({ time: timestamp, lines: lineCount, errors: errors, warnings: warnings, code: code });
+        renderHistory();
+    }
+
+    /* ============================================================
+       AI REVIEW
+    ============================================================ */
+    async function runAIReview() {
+        if (!currentCode) { alert('Run analysis first in the Analyzer tab.'); return; }
+        var output = document.getElementById('ai-output');
+        output.style.display = 'block';
+        output.innerHTML = '<div class="ai-loading"><span class="spinner"></span>AI reviewing your code...</div>';
+
+        var prompt = 'You are reviewing code for Blue Square Games (BSG), a browser-based game built in a single HTML file deployed via Google Apps Script embedded in Google Sites as an iframe. Supabase is the backend.\n\nCRITICAL CONSTRAINTS for this codebase:\n- No backtick template literals (Apps Script breaks)\n- No arrow functions (use function() {} instead)\n- No default parameters\n- No let/const (use var only)\n- No duplicate var declarations at same scope\n- No non-ASCII characters in JS strings (use HTML entities)\n\nReview this code and:\n1. Identify any bugs or issues\n2. Check for the Apps Script constraints above\n3. Note any structural problems\n4. Give specific line-level feedback where possible\n5. Rate overall code quality A-F\n\nBe concise and specific. Focus on real issues, not style preferences.\n\nCODE:\n' + currentCode.substring(0, 15000);
+
+        try {
+            var resp = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: 'claude-sonnet-4-20250514',
+                    max_tokens: 1000,
+                    messages: [{ role: 'user', content: prompt }]
+                })
+            });
+            var data = await resp.json();
+            var text = data.content && data.content[0] ? data.content[0].text : 'No response received.';
+            output.style.color = '#e6f2ff';
+            output.innerText = text;
+        } catch(e) {
+            output.style.color = '#ff4d4d';
+            output.innerText = 'Error: ' + e.message;
+        }
+    }
+
+    async function runAIQuestion() {
+        var question = document.getElementById('ai-question').value.trim();
+        if (!question) { alert('Type a question first.'); return; }
+        if (!currentCode) { alert('Paste and analyze code first.'); return; }
+        var output = document.getElementById('ai-output');
+        output.style.display = 'block';
+        output.innerHTML = '<div class="ai-loading"><span class="spinner"></span>AI thinking...</div>';
+
+        var prompt = 'You are reviewing code for Blue Square Games (BSG). Here is the code:\n\n' + currentCode.substring(0, 12000) + '\n\nQuestion: ' + question + '\n\nAnswer specifically and concisely.';
+
+        try {
+            var resp = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: 'claude-sonnet-4-20250514',
+                    max_tokens: 1000,
+                    messages: [{ role: 'user', content: prompt }]
+                })
+            });
+            var data = await resp.json();
+            var text = data.content && data.content[0] ? data.content[0].text : 'No response.';
+            output.style.color = '#e6f2ff';
+            output.innerText = text;
+        } catch(e) {
+            output.style.color = '#ff4d4d';
+            output.innerText = 'Error: ' + e.message;
+        }
+    }
+
+    /* ============================================================
+       HISTORY
+    ============================================================ */
+    function renderHistory() {
+        var list = document.getElementById('history-list');
+        if (analysisHistory.length === 0) {
+            list.innerHTML = '<div style="text-align:center;color:#4a7ab5;padding:30px;font-family:\'Orbitron\',monospace;font-size:11px;letter-spacing:2px;">NO HISTORY YET</div>';
+            return;
+        }
+        var html = '';
+        analysisHistory.forEach(function(h, i){
+            html += '<div class="history-item" onclick="loadHistory(' + i + ')">' +
+                '<div class="history-time">&#128336; ' + h.time + ' &nbsp;&nbsp; &#128196; ' + h.lines + ' lines</div>' +
+                '<div class="history-summary">' +
+                (h.errors > 0 ? '<span style="color:#ff4d4d">&#128308; ' + h.errors + ' critical &nbsp;</span>' : '') +
+                (h.warnings > 0 ? '<span style="color:#f1c40f">&#128993; ' + h.warnings + ' warnings</span>' : '') +
+                (h.errors === 0 && h.warnings === 0 ? '<span style="color:#2ecc71">&#128994; All checks passed</span>' : '') +
+                '</div></div>';
+        });
+        list.innerHTML = html;
+    }
+
+    function loadHistory(i) {
+        document.getElementById('code-input').value = analysisHistory[i].code;
+        currentCode = analysisHistory[i].code;
+        switchTab('analyzer');
+        runAnalysis();
+    }
+
+    function clearHistory() {
+        if (confirm('Clear all history?')) { analysisHistory = []; renderHistory(); }
+    }
+
+    /* ============================================================
+       UTILITIES
+    ============================================================ */
+    function clearAll() {
+        document.getElementById('code-input').value = '';
+        document.getElementById('results-section').style.display = 'none';
+        document.getElementById('stats-section').style.display = 'none';
+        currentCode = '';
+    }
+
+    function copyClean() {
+        if (!currentCode) { alert('Paste and analyze code first.'); return; }
+        navigator.clipboard.writeText(currentCode).then(function(){
+            alert('Code copied to clipboard.');
+        });
+    }
+</script>
+</body>
+</html>
